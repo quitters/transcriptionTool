@@ -1,7 +1,7 @@
 # Transcriber Project
 
 ## Overview
-This project is a YouTube transcript extraction tool that allows users to extract transcripts from videos on YouTube channels. It provides a GUI for easy interaction and supports various sorting options.
+This project is a YouTube transcript extraction tool that allows users to extract transcripts from videos on specified YouTube channels. It provides a GUI for easy interaction and supports various sorting options.
 
 ## Features
 - Extract transcripts from specified YouTube channels.
@@ -11,7 +11,7 @@ This project is a YouTube transcript extraction tool that allows users to extrac
 ## Setup
 1. Clone the repository:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/quitters/transcriptionTool.git
    ```
 2. Install the required dependencies:
    ```bash
@@ -27,6 +27,10 @@ This project is a YouTube transcript extraction tool that allows users to extrac
 2. Select a channel, sorting options, and the number of transcripts to extract.
 3. Click on the "Extract Transcripts" button to save the transcripts.
 
-## Note
+## Troubleshooting
 - Ensure that `client_secret.json` is not included in the repository for security reasons; use the provided `client_secret_template.json` as a reference.
 - The `transcripts.db` file is not included in the repository to maintain privacy.
+- If you encounter issues with the YouTube API, check your API key and permissions.
+
+## Contributions
+Feel free to fork the repository and submit pull requests for improvements or bug fixes.

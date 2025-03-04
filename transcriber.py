@@ -22,6 +22,7 @@ def create_database(db_path="transcripts.db"):
     Create (if not exists) a SQLite database with tables for videos and transcripts.
     Returns a connection object.
     """
+    # Connect to the SQLite database
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
@@ -47,6 +48,7 @@ def create_database(db_path="transcripts.db"):
         )
     """)
 
+    # Commit changes
     conn.commit()
     return conn
 
@@ -60,14 +62,18 @@ def authenticate_youtube_api(client_secrets_file="client_secret.json"):
     Make sure you have created OAuth 2.0 credentials in the Google Cloud Console
     and have placed the JSON file in the same directory.
     """
+    # Define scopes for authentication
     scopes = ["https://www.googleapis.com/auth/youtube.readonly"]
 
     try:
+        # Create flow instance
         flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(
             client_secrets_file, scopes
         )
+        # Run local server for authentication
         credentials = flow.run_local_server(port=0)
 
+        # Build YouTube API client
         youtube = googleapiclient.discovery.build(
             "youtube", "v3", credentials=credentials
         )
@@ -106,11 +112,15 @@ def parse_video_id_from_url(url):
 
 def download_single_video_transcript(youtube, conn, video_url):
     """
-    1. Parse the video ID from the URL.
-    2. Get video metadata via the YouTube Data API.
-    3. Insert the video record into the DB (if not already present).
-    4. Retrieve transcript with youtube-transcript-api and store lines in DB.
+    Downloads the transcript for a single video and stores its metadata in the database.
+    
+    Parameters:
+    youtube: The YouTube API client.
+    conn: SQLite database connection.
+    video_url: URL of the YouTube video.
     """
+    # Function to download a single video transcript and store metadata in the database
+
     video_id = parse_video_id_from_url(video_url)
     if not video_id:
         print("Error: Could not parse video ID from the provided URL.")
@@ -415,6 +425,9 @@ def download_channel_videos_transcripts(youtube, conn, channel_url):
 # Main
 # ----------------------------------------------------------
 def main():
+    """
+    Main function to run the YouTube Transcript Tool.
+    """
     print("=== YouTube Transcript Tool (Single Video or Channel) ===")
 
     # Initialize our local DB
