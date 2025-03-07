@@ -1,0 +1,32 @@
+/* Light Mode (default) */
+body {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+/* Dark Mode */
+body.dark-mode {
+    background-color: #121212;
+    color: #ffffff;
+}
+
+.dark-mode .container {
+    background-color: #1e1e1e;
+    color: #ffffff;
+}
+
+.dark-mode textarea {
+    background-color: #333333;
+    color: #ffffff;
+    border: 1px solid #555555;
+}
+
+.dark-mode button {
+    background-color: #444444;
+    color: #ffffff;
+    border: 1px solid #666666;
+}
+
+.dark-mode button:hover {
+    background-color: #555555;
+}

@@ -124,7 +124,9 @@ def download_single_video_transcript(youtube, conn, video_url):
     video_id = parse_video_id_from_url(video_url)
     if not video_id:
         print("Error: Could not parse video ID from the provided URL.")
-        return
+        return None
+
+    print(f"Fetching transcript for video ID: {video_id}")  # Debugging statement
 
     # Get video details from YouTube Data API
     try:
@@ -137,7 +139,7 @@ def download_single_video_transcript(youtube, conn, video_url):
         items = response.get("items", [])
         if not items:
             print("Error: No video found with that ID (it may be private, deleted, or invalid).")
-            return
+            return None
 
         snippet = items[0]["snippet"]
         title = snippet.get("title", "Unknown Title")
@@ -161,15 +163,16 @@ def download_single_video_transcript(youtube, conn, video_url):
             transcript = YouTubeTranscriptApi.get_transcript(video_id)
         except TranscriptsDisabled:
             print("Transcript is disabled for this video.")
-            return
+            return None
         except NoTranscriptFound:
             print("No transcript found for this video (it may be auto-generated but not available).")
-            return
+            return None
         except Exception as e:
             print(f"Error fetching transcript: {e}")
-            return
+            return None
 
         # Store each line in the "transcripts" table
+        transcript_text = ""  # Initialize transcript text
         for line in transcript:
             start_time = line["start"]
             text = line["text"]
@@ -177,12 +180,15 @@ def download_single_video_transcript(youtube, conn, video_url):
                 INSERT INTO transcripts (video_id, start_time, text)
                 VALUES (?, ?, ?)
             """, (video_id, start_time, text))
+            transcript_text += text + "\n"  # Append text to transcript
 
         conn.commit()
         print(f"Transcript for '{title}' has been saved into the database.")
+        return transcript_text  # Return the full transcript text
 
     except googleapiclient.errors.HttpError as e:
         print(f"API Error: {e}")
+        return None
 
 
 # ----------------------------------------------------------
@@ -199,15 +205,15 @@ def extract_channel_identifier(channel_url):
     # match for /channel/...
     match_channel = re.search(r"/channel/([^/\s]+)", channel_url)
     if match_channel:
-        return {"type": "channelId", "value": match_channel.group(1)}
+        return {"type": "channel_id", "value": match_channel.group(1)}
 
     # match for /user/...
     match_user = re.search(r"/user/([^/\s]+)", channel_url)
     if match_user:
-        return {"type": "forUsername", "value": match_user.group(1)}
+        return {"type": "username", "value": match_user.group(1)}
 
-    # match handle: @something
-    match_handle = re.search(r"(@[A-Za-z0-9_-]+)", channel_url)
+    # match for @HANDLE...
+    match_handle = re.search(r"@([^/\s]+)", channel_url)
     if match_handle:
         return {"type": "handle", "value": match_handle.group(1)}
 
@@ -226,10 +232,10 @@ def get_channel_id(youtube, identifier_dict):
     id_type = identifier_dict["type"]
     value = identifier_dict["value"]
 
-    if id_type == "channelId":
+    if id_type == "channel_id":
         # Already have the channel ID
         return value
-    elif id_type == "forUsername":
+    elif id_type == "username":
         # channels.list using forUsername
         try:
             request = youtube.channels().list(
@@ -422,6 +428,16 @@ def download_channel_videos_transcripts(youtube, conn, channel_url):
 
 
 # ----------------------------------------------------------
+# Fetch transcripts from the database
+# ----------------------------------------------------------
+def fetch_transcripts(conn):
+    cursor = conn.cursor()
+    cursor.execute("SELECT title FROM videos")  # Adjust the query as needed
+    transcripts = cursor.fetchall()
+    return [{"title": title} for (title,) in transcripts]
+
+
+# ----------------------------------------------------------
 # Main
 # ----------------------------------------------------------
 def main():
@@ -441,16 +457,24 @@ def main():
         print("\nSelect an option:")
         print("1. Download transcript for a single YouTube video")
         print("2. Advanced: Download transcripts from an entire channel")
-        print("3. Exit")
+        print("3. Fetch transcripts from the database")
+        print("4. Exit")
         choice = input("> ").strip()
 
         if choice == "1":
             video_url = input("Enter the full YouTube video URL: ").strip()
-            download_single_video_transcript(youtube, conn, video_url)
+            transcript_text = download_single_video_transcript(youtube, conn, video_url)
+            if transcript_text:
+                print("\nTranscript:")
+                print(transcript_text)
         elif choice == "2":
             channel_url = input("Enter the channel URL (e.g., https://www.youtube.com/channel/UC...): ").strip()
             download_channel_videos_transcripts(youtube, conn, channel_url)
         elif choice == "3":
+            transcripts = fetch_transcripts(conn)
+            for transcript in transcripts:
+                print(transcript)
+        elif choice == "4":
             print("Goodbye!")
             break
         else:

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Transcript Collector</title>
+    <style>
+        /* Add styling for the UI */
+        body { font-family: Arial, sans-serif; }
+        #input-section { margin-bottom: 20px; }
+        .hidden { display: none; }
+        .container {
+            display: flex;
+            flex-direction: row;
+        }
+        .left-column {
+            width: 50%;
+        }
+        .right-column {
+            width: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-column">
+            <h1>YouTube Transcript Collector</h1>
+            <div id="input-section">
+                <input type="text" id="url-input" placeholder="Paste YouTube URL here">
+                <button id="process-btn">Process URL</button>
+                <button id="theme-toggle">Toggle Dark Mode</button>
+            </div>
+            <div id="channel-ui" class="hidden">
+                <h2>Channel Options</h2>
+                <label for="sort-options">Sort By:</label>
+                <select id="sort-options">
+                    <option value="views">View Count</option>
+                    <option value="likes">Like Ratio</option>
+                    <option value="date">Publish Date</option>
+                </select>
+                <br>
+                <label for="num-transcripts">Number of Transcripts:</label>
+                <input type="number" id="num-transcripts" min="1" required>
+                <br>
+                <button id="start-process-btn">Start Process</button>
+                <div id="success-message" class="hidden">Success! Transcripts added.</div>
+            </div>
+            <div id="video-ui" class="hidden">
+                <h2>Video Options</h2>
+                <img id="video-thumbnail" src="" alt="Video Thumbnail" class="hidden">
+                <div id="transcript-preview" class="hidden">
+                    <h3>Transcript:</h3>
+                    <textarea id="transcript-text" rows="10" cols="50" readonly></textarea>
+                </div>
+                <button id="add-to-db-btn">Add to Database</button>
+                <div id="video-confirmation" class="hidden">Confirmed!</div>
+            </div>
+        </div>
+        <div class="right-column">
+            <h1>Database</h1>
+            <div id="sorting-options">
+                <label for="db-sort-options">Sort By:</label>
+                <select id="db-sort-options">
+                    <option value="publish_date">Publish Date</option>
+                    <option value="views">View Count</option>
+                    <option value="likes">Likes</option>
+                    <option value="duration">Duration</option>
+                    <option value="comment_count">Comment Count</option>
+                </select>
+                <button id="sort-btn">Sort</button>
+            </div>
+            <ul id="transcript-list">
+                <!-- Transcript items will be dynamically populated here -->
+            </ul>
+        </div>
+    </div>
+    <div id="status-message"></div>
+    <script>
+        document.getElementById('process-btn').addEventListener('click', function() {
+            const urlInput = document.getElementById('url-input').value;
+            const channelUI = document.getElementById('channel-ui');
+            const videoUI = document.getElementById('video-ui');
+            const statusMessage = document.getElementById('status-message');
+
+            // Reset UI
+            channelUI.classList.add('hidden');
+            videoUI.classList.add('hidden');
+            statusMessage.textContent = '';
+
+            // URL validation and processing logic
+            if (urlInput.includes('youtube.com/channel/') || urlInput.includes('youtu.be')) {
+                // Channel URL detected
+                channelUI.classList.remove('hidden');
+            } else if (urlInput.includes('youtube.com/watch?v=')) {
+                // Video URL detected
+                videoUI.classList.remove('hidden');
+                // Optionally, fetch and display video thumbnail
+                const videoId = urlInput.split('v=')[1];
+                const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/0.jpg`;
+                document.getElementById('video-thumbnail').src = thumbnailUrl;
+                document.getElementById('video-thumbnail').classList.remove('hidden');
+            } else {
+                // Invalid URL
+                statusMessage.textContent = 'Invalid URL. Please enter a valid YouTube channel or video URL.';
+            }
+        });
+    </script>
+</body>
+</html>
